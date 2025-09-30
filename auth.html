@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Beat Gallery - Authentication</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles/styles.css">
+  <style>
+    .auth-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .auth-card {
+      background: #1a1a1a;
+      border-radius: 20px;
+      padding: 40px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+      border: 1px solid #333333;
+    }
+
+    .auth-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .auth-header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      background: linear-gradient(45deg, #ffffff, #b0b0b0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .auth-header p {
+      color: #cccccc;
+      font-size: 1rem;
+    }
+
+    .auth-tabs {
+      display: flex;
+      margin-bottom: 30px;
+      background: #2a2a2a;
+      border-radius: 10px;
+      padding: 4px;
+    }
+
+    .auth-tab {
+      flex: 1;
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      color: #888888;
+      font-weight: 600;
+    }
+
+    .auth-tab.active {
+      background: #333333;
+      color: #ffffff;
+    }
+
+    .auth-form {
+      display: none;
+    }
+
+    .auth-form.active {
+      display: block;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #333333;
+      border-radius: 10px;
+      font-size: 16px;
+      transition: border-color 0.3s ease;
+      background: #2a2a2a;
+      color: #ffffff;
+      box-sizing: border-box;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #555555;
+      background: #333333;
+    }
+
+    .form-group input::placeholder {
+      color: #888888;
+    }
+
+    .auth-btn {
+      width: 100%;
+      background: linear-gradient(45deg, #333333, #1a1a1a);
+      color: white;
+      border: 1px solid #555555;
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 10px;
+    }
+
+    .auth-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+      background: linear-gradient(45deg, #444444, #2a2a2a);
+    }
+
+    .auth-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .error-message {
+      background: rgba(255,0,0,0.1);
+      border: 1px solid #ff4444;
+      color: #ff6666;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .success-message {
+      background: rgba(0,255,0,0.1);
+      border: 1px solid #44ff44;
+      color: #66ff66;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .loading {
+      text-align: center;
+      color: #ffffff;
+      padding: 20px;
+    }
+
+    .back-to-home {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .back-to-home a {
+      color: #888888;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .back-to-home a:hover {
+      color: #ffffff;
+    }
+
+    @media (max-width: 480px) {
+      .auth-card {
+        padding: 30px 20px;
+        margin: 10px;
+      }
+
+      .auth-header h1 {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-header">
+        <h1>🎬 Beat Gallery</h1>
+        <p>Sign in to upload and manage your videos</p>
+      </div>
+
+      <div class="auth-tabs">
+        <div class="auth-tab active" onclick="switchTab('login')">Login</div>
+        <div class="auth-tab" onclick="switchTab('register')">Register</div>
+      </div>
+
+      <!-- Error/Success Messages -->
+      <div id="errorMessage" class="error-message"></div>
+      <div id="successMessage" class="success-message"></div>
+
+      <!-- Login Form -->
+      <form id="loginForm" class="auth-form active">
+        <div class="form-group">
+          <label for="loginEmail">Email</label>
+          <input type="email" id="loginEmail" placeholder="Enter your email" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" placeholder="Enter your password" required>
+        </div>
+        
+        <button type="submit" class="auth-btn" id="loginBtn">
+          Sign In
+        </button>
+      </form>
+
+      <!-- Register Form -->
+      <form id="registerForm" class="auth-form">
+        <div class="form-group">
+          <label for="registerName">Full Name</label>
+          <input type="text" id="registerName" placeholder="Enter your full name" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="registerEmail">Email</label>
+          <input type="email" id="registerEmail" placeholder="Enter your email" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="registerPassword">Password</label>
+          <input type="password" id="registerPassword" placeholder="Create a password" required minlength="6">
+        </div>
+        
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password</label>
+          <input type="password" id="confirmPassword" placeholder="Confirm your password" required>
+        </div>
+        
+        <button type="submit" class="auth-btn" id="registerBtn">
+          Create Account
+        </button>
+      </form>
+
+    </div>
+  </div>
+
+  <script type="module" src="scripts/auth.js"></script>
+</body>
+</html>

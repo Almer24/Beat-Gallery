@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Glitch Text</title>
+<style>
+  .glitch {
+    color: #fff;
+    font-size: clamp(2rem, 10vw, 8rem);
+    white-space: nowrap;
+    font-weight: 900;
+    position: relative;
+    margin: 0 auto;
+    user-select: none;
+    cursor: pointer;
+    --after-duration: 3s;
+    --before-duration: 2s;
+    --after-shadow: -5px 0 red;
+    --before-shadow: 5px 0 cyan;
+  }
+
+  .glitch::after,
+  .glitch::before {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    color: #fff;
+    background-color: #060010;
+    overflow: hidden;
+    clip-path: inset(0 0 0 0);
+  }
+
+  /* Always glitch */
+  .glitch.no-hover::after {
+    left: 10px;
+    text-shadow: var(--after-shadow);
+    animation: animate-glitch var(--after-duration) infinite linear alternate-reverse;
+  }
+  .glitch.no-hover::before {
+    left: -10px;
+    text-shadow: var(--before-shadow);
+    animation: animate-glitch var(--before-duration) infinite linear alternate-reverse;
+  }
+
+  /* Glitch on hover only */
+  .glitch.hover-only::after,
+  .glitch.hover-only::before {
+    content: '';
+    opacity: 0;
+    animation: none;
+  }
+  .glitch.hover-only:hover::after {
+    content: attr(data-text);
+    opacity: 1;
+    left: 10px;
+    text-shadow: var(--after-shadow);
+    animation: animate-glitch var(--after-duration) infinite linear alternate-reverse;
+  }
+  .glitch.hover-only:hover::before {
+    content: attr(data-text);
+    opacity: 1;
+    left: -10px;
+    text-shadow: var(--before-shadow);
+    animation: animate-glitch var(--before-duration) infinite linear alternate-reverse;
+  }
+
+  @keyframes animate-glitch {
+    0% { clip-path: inset(20% 0 50% 0); }
+    5% { clip-path: inset(10% 0 60% 0); }
+    10% { clip-path: inset(15% 0 55% 0); }
+    15% { clip-path: inset(25% 0 35% 0); }
+    20% { clip-path: inset(30% 0 40% 0); }
+    25% { clip-path: inset(40% 0 20% 0); }
+    30% { clip-path: inset(10% 0 60% 0); }
+    35% { clip-path: inset(15% 0 55% 0); }
+    40% { clip-path: inset(25% 0 35% 0); }
+    45% { clip-path: inset(30% 0 40% 0); }
+    50% { clip-path: inset(20% 0 50% 0); }
+    55% { clip-path: inset(10% 0 60% 0); }
+    60% { clip-path: inset(15% 0 55% 0); }
+    65% { clip-path: inset(25% 0 35% 0); }
+    70% { clip-path: inset(30% 0 40% 0); }
+    75% { clip-path: inset(40% 0 20% 0); }
+    80% { clip-path: inset(20% 0 50% 0); }
+    85% { clip-path: inset(10% 0 60% 0); }
+    90% { clip-path: inset(15% 0 55% 0); }
+    95% { clip-path: inset(25% 0 35% 0); }
+    100% { clip-path: inset(30% 0 40% 0); }
+  }
+</style>
+</head>
+<body style="background:#060010; display:flex; justify-content:center; align-items:center; height:100vh;">
+
+<div class="glitch no-hover" data-text="BEAT GALLERY">BEAT GALLERY</div>
+
+<script>
+  // Example JS to dynamically change speed or shadows
+  const glitch = document.querySelector('.glitch');
+  const speed = 1; // You can change this
+  const enableShadows = true;
+
+  glitch.style.setProperty('--after-duration', `${speed*3}s`);
+  glitch.style.setProperty('--before-duration', `${speed*2}s`);
+  glitch.style.setProperty('--after-shadow', enableShadows ? '-5px 0 red' : 'none');
+  glitch.style.setProperty('--before-shadow', enableShadows ? '5px 0 cyan' : 'none');
+</script>
+
+</body>
+</html>
