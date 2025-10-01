@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Watch Video - Beat Gallery</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Beat Gallery</h1>
+      <p>Watch and explore more videos</p>
+    </div>
+
+    <div id="watchLayout" style="display:grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: start;">
+      <!-- Main player column -->
+      <div id="playerColumn">
+        <div class="video-card" style="box-shadow:none; border: 1px solid #333;">
+          <div class="video-container" style="height: 420px;">
+            <video id="player" width="100%" controls>
+              <source id="playerSource" src="" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+          <div class="video-info">
+            <h3 id="videoTitle" class="video-title"></h3>
+            <p id="videoArtist" class="video-artist"></p>
+            <p id="videoDuration" class="video-duration"></p>
+            <p id="videoDate" class="video-date"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar column -->
+      <div id="sidebarColumn">
+        <h3 class="video-title" style="margin-bottom:12px;">Up next</h3>
+        <div id="sidebarList" style="display:flex; flex-direction:column; gap:12px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="scripts/video.js"></script>
+</body>
+</html>
+
+

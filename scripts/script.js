@@ -167,6 +167,37 @@ function handleFileSelect(e) {
     label.textContent = `📁 Selected: ${file.name}`;
     label.style.background = "#667eea";
     label.style.color = "white";
+    // Auto-detect duration using a temporary video element
+    try {
+      const tempVideo = document.createElement('video');
+      tempVideo.preload = 'metadata';
+      tempVideo.src = URL.createObjectURL(file);
+      const setDurationFromVideo = () => {
+        URL.revokeObjectURL(tempVideo.src);
+        const seconds = Number.isFinite(tempVideo.duration) ? Math.round(tempVideo.duration) : 0;
+        const mm = Math.floor(seconds / 60);
+        const ss = (seconds % 60).toString().padStart(2, '0');
+        const mmss = `${mm}:${ss}`;
+        const durationField = document.getElementById('videoDuration');
+        if (durationField) {
+          durationField.value = mmss;
+          durationField.dataset.seconds = String(seconds);
+        }
+      };
+      tempVideo.addEventListener('loadedmetadata', setDurationFromVideo, { once: true });
+      tempVideo.addEventListener('durationchange', () => {
+        if (tempVideo.duration && isFinite(tempVideo.duration)) {
+          setDurationFromVideo();
+        }
+      }, { once: true });
+      // Safari sometimes needs a load()
+      try { tempVideo.load(); } catch {}
+      tempVideo.onerror = () => {
+        
+      };
+    } catch (err) {
+      
+    }
   } else {
     label.textContent = "📁 Click to select video file";
     label.style.background = "#f8f9ff";
@@ -230,22 +261,35 @@ async function uploadVideo() {
   const titleInput = document.getElementById("videoTitle").value.trim();
   const artistInput = document.getElementById("videoArtist").value.trim();
   const durationInput = document.getElementById("videoDuration").value.trim();
+  const durationDetectedSeconds = parseInt(document.getElementById("videoDuration").dataset.seconds || '0', 10);
 
   if (!file) {
     alert("Please choose a video first!");
     return;
   }
 
-  if (!titleInput || !artistInput || !durationInput) {
-    alert("Please fill in all fields!");
+  if (!titleInput || !artistInput) {
+    alert("Please fill in title and artist!");
     return;
   }
 
-  // Validate and parse duration format (MM:SS)
-  const durationInSeconds = parseDurationToSeconds(durationInput);
-  if (durationInSeconds === null) {
-    alert("Please enter duration in MM:SS format (e.g., 3:45)");
-    return;
+  // Determine duration seconds: prefer auto-detected; fallback to parsing
+  let durationInSeconds = Number.isFinite(durationDetectedSeconds) && durationDetectedSeconds > 0
+    ? durationDetectedSeconds
+    : (parseDurationToSeconds(durationInput) ?? 0);
+
+  // Fallback: read duration from file metadata right before upload if still 0
+  if (!durationInSeconds && file) {
+    durationInSeconds = await getVideoDurationSeconds(file).catch(() => 0);
+    if (durationInSeconds > 0) {
+      const mm = Math.floor(durationInSeconds / 60);
+      const ss = (durationInSeconds % 60).toString().padStart(2, '0');
+      const durationField = document.getElementById('videoDuration');
+      if (durationField) {
+        durationField.value = `${mm}:${ss}`;
+        durationField.dataset.seconds = String(durationInSeconds);
+      }
+    }
   }
 
   // Disable submit button and show loading
@@ -274,15 +318,35 @@ async function uploadVideo() {
 
     const videoUrl = urlData.publicUrl;
 
-    // Save metadata in Firestore with user information
+    // Ensure we use the user's profile name from users collection
+    let profileName = userProfile?.name;
+    if (!profileName && currentUser?.uid) {
+      try {
+        const profileDoc = await getDoc(doc(db, 'users', currentUser.uid));
+        if (profileDoc.exists()) {
+          profileName = profileDoc.data().name;
+          console.log('[upload] loaded profile name from users:', profileName);
+        } else {
+          console.log('[upload] no users profile doc found for', currentUser.uid);
+        }
+      } catch (e) {
+        console.warn('[upload] failed to load users profile:', e);
+      }
+    }
+
+    // Final uploaderName: prefer profileName; fallback to artist input; never use email
+    const chosenUploaderName = profileName || artistInput || 'Unknown';
+    console.log('[upload] uploaderName to store:', chosenUploaderName);
+    // Ensure duration string (MM:SS)
+    const durationString = document.getElementById("videoDuration").value.trim();
     await saveVideoDetails({
       title: titleInput,
       artist: artistInput,
-      duration: durationInput, // duration in MM:SS format
+      duration: durationString, // duration in MM:SS format (auto-filled)
       durationSeconds: durationInSeconds, // duration in seconds for calculations
       videoUrl,
       uploadedBy: currentUser.uid,
-      uploaderName: userProfile?.name || currentUser.email,
+      uploaderName: chosenUploaderName,
       uploaderEmail: currentUser.email
     });
 
@@ -363,18 +427,64 @@ try {
   const querySnapshot = await getDocs(q);
 
     allVideos = [];
-    querySnapshot.forEach((doc) => {
-      const data = doc.data();
+    const uploaderIds = new Set();
+    querySnapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      console.log('[fetch] video doc', docSnap.id, {
+        title: data?.title,
+        artist: data?.artist,
+        uploadedBy: data?.uploadedBy,
+        uploaderName: data?.uploaderName,
+        uploaderEmail: data?.uploaderEmail
+      });
+      if (data.uploadedBy) uploaderIds.add(data.uploadedBy);
       allVideos.push({
-        id: doc.id,
+        id: docSnap.id,
         title: data.title,
         artist: data.artist,
         videoUrl: data.video_url,
         uploadedAt: data.uploadedAt,
         uploadedBy: data.uploadedBy,
-        uploaderName: data.uploaderName || data.artist, // Fallback to artist if no uploaderName
+        duration: data.duration,
+        durationSeconds: data.durationSeconds,
+        uploaderName: data.uploaderName || data.artist || 'Unknown',
         uploaderEmail: data.uploaderEmail
       });
+    });
+
+    // Fetch uploader display names from users collection, prefer 'name' field
+    const uploaderNameMap = new Map();
+    await Promise.all(
+      Array.from(uploaderIds).map(async (uid) => {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', uid));
+          if (userDoc.exists()) {
+            const u = userDoc.data();
+            console.log('[fetch] users profile', uid, u);
+            if (u && u.name) {
+              uploaderNameMap.set(uid, u.name);
+              console.log('[fetch] profile name found for', uid, '=>', u.name);
+            } else {
+              console.log('[fetch] no profile name for', uid, 'profile:', u);
+            }
+          } else {
+            console.log('[fetch] no users doc for', uid);
+          }
+        } catch (e) {
+          console.warn('Could not load user profile for', uid, e);
+        }
+      })
+    );
+
+    // Overwrite uploaderName with profile name when available
+    allVideos = allVideos.map(v => {
+      const finalName = uploaderNameMap.get(v.uploadedBy) || v.uploaderName;
+      if (v.uploaderName !== finalName) {
+        console.log('[fetch] overriding uploaderName for video', v.id, 'from', v.uploaderName, 'to', finalName);
+      } else {
+        console.log('[fetch] keeping uploaderName for video', v.id, 'as', finalName);
+      }
+      return { ...v, uploaderName: finalName };
     });
 
     // Apply current filters
@@ -422,7 +532,7 @@ videos.forEach(video => {
         </video>
         ${canDelete ? `
         <div class="video-actions">
-          <button class="action-btn" onclick="deleteVideo('${video.id}')" title="Delete video">
+          <button class="action-btn" data-delete-id="${video.id}" title="Delete video">
             🗑️
           </button>
         </div>
@@ -435,6 +545,23 @@ videos.forEach(video => {
         <p class="video-date">${uploadDate}</p>
       </div>
     `;
+
+  // Navigate to video page when clicking the card or video (but not the delete button)
+  card.addEventListener('click', (e)=>{
+    const target = e.target;
+    if (target.closest('[data-delete-id]')) return; // ignore clicks on delete
+    window.location.href = `video.html?id=${video.id}`;
+  });
+
+  // Wire delete button
+  if (canDelete) {
+    const delBtn = card.querySelector('[data-delete-id]');
+    delBtn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const vid = delBtn.getAttribute('data-delete-id');
+      deleteVideo(vid);
+    });
+  }
 
   videoGrid.appendChild(card);
 });
@@ -554,6 +681,27 @@ function extractFileNameFromUrl(url) {
     console.error("Error extracting filename:", error);
     return null;
   }
+}
+
+// Helper to read duration from a File via a temporary video element
+async function getVideoDurationSeconds(file) {
+  return new Promise((resolve) => {
+    try {
+      const el = document.createElement('video');
+      el.preload = 'metadata';
+      el.src = URL.createObjectURL(file);
+      const cleanup = () => {
+        try { URL.revokeObjectURL(el.src); } catch {}
+      };
+      el.addEventListener('loadedmetadata', () => {
+        const dur = Number.isFinite(el.duration) ? Math.round(el.duration) : 0;
+        cleanup();
+        resolve(dur);
+      }, { once: true });
+      el.addEventListener('error', () => { cleanup(); resolve(0); }, { once: true });
+      try { el.load(); } catch {}
+    } catch { resolve(0); }
+  });
 }
 
 // Make deleteVideo globally accessible
