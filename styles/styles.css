@@ -6,7 +6,7 @@
 
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #0f0f0f 100%);
+  background-color: #060010;
   min-height: 100vh;
   color: #e0e0e0;
 }
@@ -17,13 +17,26 @@ body {
   padding: 20px;
 }
 
-.header {
-  text-align: center;
+.titleHeader {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
   margin-bottom: 40px;
   color: #ffffff;
+  height: 90vh;
+  margin-top: 10vh;
 }
 
-.header h1 {
+.titleHeader button{
+  max-width: 150px;
+}
+
+
+.titleHeader h1 {
+  font-size: 90px;;
+}
+/* .titleHeader h1 {
   font-size: 3rem;
   margin-bottom: 10px;
   text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
@@ -31,9 +44,9 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-}
+} */
 
-.header p {
+.titleHeader p {
   font-size: 1.2rem;
   opacity: 0.8;
   color: #cccccc;
@@ -46,6 +59,12 @@ body {
   margin-bottom: 30px;
   flex-wrap: wrap;
   gap: 15px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: lightblue;
+  height: 10vh;
 }
 
 .control-buttons {

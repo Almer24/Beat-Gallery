@@ -5,14 +5,10 @@
   <title>School Videos Project</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="styles/styles.css">
+  <link rel="stylesheet" href="components/glitch.css">
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <h1>Beat Gallery</h1>
-      <p>Share and discover amazing videos</p>
-    </div>
-
     <div class="controls">
       <div class="search-container">
         <span class="search-icon">🔍</span>
@@ -23,6 +19,12 @@
         <button id="allVideosBtn" class="filter-btn active">🎬 All Videos</button>
         <button id="uploadBtn" class="upload-btn">+ Upload Video</button>
       </div>
+    </div>
+
+    <div class="titleHeader">
+      <h1 class="glitch no-hover" data-text="Beat Gallery">Beat Gallery</h1>
+      <p>Share and discover amazing videos</p>
+      <button>Watch Now</button>
     </div>
 
     <div id="videoGrid"></div>
@@ -71,6 +73,7 @@
 
 
   <script type="module" src="scripts/script.js"></script>
+  <script type="module" src="components/glitch.js"></script>
 </body>
 </html>
 
