@@ -10,14 +10,12 @@
 <body>
   <div class="container">
     <div class="controls">
-      <div class="search-container">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="searchInput" class="search-input" placeholder="Search videos by title or artist...">
-      </div>
+      <h2>Beat Gallery</h2>
+      
       <div class="control-buttons">
-        <button id="myUploadsBtn" class="filter-btn">📁 My Uploads</button>
-        <button id="allVideosBtn" class="filter-btn active">🎬 All Videos</button>
-        <button id="uploadBtn" class="upload-btn">+ Upload Video</button>
+        <a id="myUploadsBtn" class="filter-btn" onclick="document.getElementById('videoGrid').scrollIntoView({ behavior: 'smooth', block: 'end' })">My Uploads</a>
+        <a id="allVideosBtn" class="filter-btn active" onclick="document.getElementById('videoGrid').scrollIntoView({ behavior: 'smooth', block: 'end' })">All Videos</a>
+        <a id="uploadBtn" class="upload-btn">Upload Video</a>
       </div>
     </div>
 
@@ -26,7 +24,10 @@
       <p>Share and discover amazing videos</p>
       <button>Watch Now</button>
     </div>
-
+    <div class="search-container">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" class="search-input" placeholder="Search videos by title or artist...">
+      </div>
     <div id="videoGrid"></div>
   </div>
 
