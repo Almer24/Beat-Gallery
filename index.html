@@ -13,21 +13,22 @@
       <h2>Beat Gallery</h2>
       
       <div class="control-buttons">
+        <div class="search-container">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchInput" class="search-input" placeholder="Search videos by title or artist...">
+        </div>
         <a id="myUploadsBtn" class="filter-btn" onclick="document.getElementById('videoGrid').scrollIntoView({ behavior: 'smooth', block: 'end' })">My Uploads</a>
         <a id="allVideosBtn" class="filter-btn active" onclick="document.getElementById('videoGrid').scrollIntoView({ behavior: 'smooth', block: 'end' })">All Videos</a>
         <a id="uploadBtn" class="upload-btn">Upload Video</a>
       </div>
     </div>
 
-    <div class="titleHeader">
+    <div class="titleHeader" id="titleHeader">
+      <div class="overlay"></div>
       <h1 class="glitch no-hover" data-text="Beat Gallery">Beat Gallery</h1>
       <p>Share and discover amazing videos</p>
       <button>Watch Now</button>
     </div>
-    <div class="search-container">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="searchInput" class="search-input" placeholder="Search videos by title or artist...">
-      </div>
     <div id="videoGrid"></div>
   </div>
 

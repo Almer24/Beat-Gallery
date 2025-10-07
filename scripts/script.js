@@ -12,8 +12,7 @@ console.log(supabase);
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js"; 
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js"; 
-import { getFirestore, collection, addDoc, serverTimestamp, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-import { getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, serverTimestamp, getDoc, updateDoc, increment, doc, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 // 🔑 Your Firebase project configuration 
 const firebaseConfig = { 
@@ -86,13 +85,12 @@ function updateUIForLoggedInUser() {
   }
   
   // Add logout button
-  const controls = document.querySelector('.controls');
+  const controls = document.querySelector('.control-buttons');
   if (controls && !document.getElementById('logoutBtn')) {
     const logoutBtn = document.createElement('button');
     logoutBtn.id = 'logoutBtn';
     logoutBtn.className = 'upload-btn';
     logoutBtn.textContent = 'Logout';
-    logoutBtn.style.background = 'linear-gradient(45deg, #ff4444, #cc0000)';
     logoutBtn.style.marginLeft = '10px';
     logoutBtn.onclick = handleLogout;
     controls.appendChild(logoutBtn);
@@ -319,12 +317,16 @@ async function uploadVideo() {
     const videoUrl = urlData.publicUrl;
 
     // Ensure we use the user's profile name from users collection
+    console.log('[upload] userProfile at start:', userProfile);
     let profileName = userProfile?.name;
+    console.log('[upload] profileName from userProfile:', profileName);
     if (!profileName && currentUser?.uid) {
       try {
         const profileDoc = await getDoc(doc(db, 'users', currentUser.uid));
         if (profileDoc.exists()) {
-          profileName = profileDoc.data().name;
+          const profileData = profileDoc.data();
+          console.log('[upload] full profile data:', profileData);
+          profileName = profileData.name;
           console.log('[upload] loaded profile name from users:', profileName);
         } else {
           console.log('[upload] no users profile doc found for', currentUser.uid);
@@ -334,8 +336,8 @@ async function uploadVideo() {
       }
     }
 
-    // Final uploaderName: prefer profileName; fallback to artist input; never use email
-    const chosenUploaderName = profileName || artistInput || 'Unknown';
+    // Final uploaderName: use profileName, never use artist
+    const chosenUploaderName = profileName || 'User';
     console.log('[upload] uploaderName to store:', chosenUploaderName);
     // Ensure duration string (MM:SS)
     const durationString = document.getElementById("videoDuration").value.trim();
@@ -447,7 +449,7 @@ try {
         uploadedBy: data.uploadedBy,
         duration: data.duration,
         durationSeconds: data.durationSeconds,
-        uploaderName: data.uploaderName || data.artist || 'Unknown',
+        uploaderName: data.uploaderName || 'Unknown',
         uploaderEmail: data.uploaderEmail
       });
     });
@@ -540,6 +542,7 @@ videos.forEach(video => {
       </div>
       <div class="video-info">
         <h3 class="video-title">${video.title}</h3>
+        <p class="video-artist">Artist: ${video.artist}</p>
         <p class="video-artist">Uploaded by: ${video.uploaderName}</p>
         <p class="video-duration">Duration: ${video.duration || formatSecondsToMMSS(video.durationSeconds || 0)}</p>
         <p class="video-date">${uploadDate}</p>

@@ -12,9 +12,10 @@ body {
 }
 
 .container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
+  /* /* max-width: 1200px;
+  margin: 0 auto; 
+  padding: 20px; */
+  width: 100%;
 }
 
 .titleHeader {
@@ -25,16 +26,38 @@ body {
   margin-bottom: 40px;
   color: #ffffff;
   height: 90vh;
+  width: 100%;
   margin-top: 10vh;
+  position: relative;
+  background: url('background.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding-left: 50px;
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  /* width: 100%;
+  height: 100%; */
+  z-index: 10;
+  /* background: rgb(6, 0, 16, 0.6); Adjust darkness (0.4 = 40%) */
+  background: linear-gradient(90deg, rgb(6, 0, 16, 1) 0%, rgb(6, 0, 16, 1) 35%, rgb(6, 0, 16, 0.3) 100%)
 }
 
 .titleHeader button{
   max-width: 150px;
+  z-index: 11;
 }
 
 
 .titleHeader h1 {
-  font-size: 90px;;
+  font-size: 90px;
+  z-index: 11;
 }
 /* .titleHeader h1 {
   font-size: 3rem;
@@ -50,6 +73,7 @@ body {
   font-size: 1.2rem;
   opacity: 0.8;
   color: #cccccc;
+  z-index: 11;
 }
 
 .controls {
@@ -67,12 +91,15 @@ body {
   height: 10vh;
   z-index: 100;
   background-color: #060010;
+  padding: 0px 50px;
 }
 
 .control-buttons {
   display: flex;
   gap: 10px;
   align-items: center;
+  justify-content: space-between;
+  width: 70%;
 }
 
 .search-container {
@@ -86,7 +113,7 @@ body {
   padding: 12px 20px 12px 45px;
   border: none;
   border-radius: 25px;
-  font-size: 16px;
+  font-size: 14px;
   background: rgba(40,40,40,0.9);
   backdrop-filter: blur(10px);
   box-shadow: 0 4px 15px rgba(0,0,0,0.3);
@@ -125,7 +152,7 @@ body {
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(0,0,0,0.5); */
-  font-size: 16px;
+  font-size: 14px;
   cursor: pointer;
   color: white;
   text-decoration: none;
@@ -136,7 +163,7 @@ body {
   box-shadow: 0 6px 20px rgba(0,0,0,0.7);
   background: linear-gradient(45deg, #444444, #2a2a2a);
   border: 1px solid #666666; */
-  color: #ff4444;
+  text-shadow: 0 0 50px #ff4444;
 }
 
 .upload-btn:active {
@@ -154,7 +181,7 @@ body {
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3); */
-  font-size: 16px;
+  font-size: 14px;
   cursor: pointer;
   color: white;
   text-decoration: none;
@@ -180,6 +207,13 @@ body {
   /* background: linear-gradient(45deg, #7c8cff, #8a5fb8);
   box-shadow: 0 6px 20px rgba(102,126,234,0.4); */
   color: lightcyan;
+}
+
+#logoutBtn {
+  padding: 5px 10px;
+  background-color: red;
+  border: none;
+  border-radius: 50px;
 }
 
 /* Modal Styles */
