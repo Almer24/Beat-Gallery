@@ -49,11 +49,51 @@ body {
   background: linear-gradient(90deg, rgb(6, 0, 16, 1) 0%, rgb(6, 0, 16, 1) 35%, rgb(6, 0, 16, 0.3) 100%)
 }
 
-.titleHeader button{
+.titleHeader button {
   max-width: 150px;
   z-index: 11;
+  padding: 10px 20px;
+  border-radius: 50px;
+  border: none;
+  margin-top: 20px;
+  margin-bottom: 100px;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgb(255, 255, 255);
+  text-shadow:
+    -1px -1px 0 black,
+     1px -1px 0 black,
+    -1px  1px 0 black,
+     1px  1px 0 black;
+  background: linear-gradient(270deg, red, cyan, red, cyan);
+  background-size: 400% 400%;
+  background-position: 0% 50%;
+  transition: all 0.3s ease;
+  cursor: pointer;
 }
 
+/* Apply animation only while hovering */
+.titleHeader button:hover {
+  animation: gradientShift 3s ease infinite;
+}
+
+/* Keyframes for smooth color looping */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.titleHeader button:active {
+  transform: scale(0.95);
+  filter: brightness(0.9);
+}
 
 .titleHeader h1 {
   font-size: 90px;
@@ -92,6 +132,10 @@ body {
   z-index: 100;
   background-color: #060010;
   padding: 0px 50px;
+}
+
+.controls h2{
+  cursor: pointer;
 }
 
 .control-buttons {
@@ -369,20 +413,20 @@ body {
 /* Video Grid */
 #videoGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 25px;
-  margin-top: 30px;
+  margin: 12vh 50px 30px 50px;
   min-height: 100vh;
 }
 
 .video-card {
-  background: #1a1a1a;
+  /* background: #1a1a1a; */
+  /* box-shadow: 0 8px 25px rgba(0,0,0,0.5); */
+  /* border: 1px solid #333333; */
   border-radius: 15px;
   overflow: hidden;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.5);
   transition: all 0.3s ease;
   position: relative;
-  border: 1px solid #333333;
   height: fit-content;
 }
 

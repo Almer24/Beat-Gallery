@@ -122,6 +122,12 @@ async function handleLogout() {
 }
 
 function setupEventListeners() {
+  //Remove titleHeader
+  document.getElementById("watchBtn").addEventListener("click", removeTitleHeader);
+
+  //Add titleHeader
+  document.getElementById("navTitle").addEventListener("click", addTitleHeader);
+
   // Modal controls
   document.getElementById("uploadBtn").addEventListener("click", openUploadModal);
   document.getElementById("closeModal").addEventListener("click", closeUploadModal);
@@ -131,8 +137,14 @@ function setupEventListeners() {
   document.getElementById("searchInput").addEventListener("input", handleSearch);
   
   // Filter buttons
-  document.getElementById("myUploadsBtn").addEventListener("click", () => setFilter('my'));
-  document.getElementById("allVideosBtn").addEventListener("click", () => setFilter('all'));
+  document.getElementById("myUploadsBtn").addEventListener("click", () => {
+    setFilter('my');
+    removeTitleHeader();
+  });
+  document.getElementById("allVideosBtn").addEventListener("click", () => {
+    setFilter('all');
+    removeTitleHeader();
+  });
   
   // Close modal when clicking outside
   document.getElementById("uploadModal").addEventListener("click", (e) => {
@@ -143,6 +155,16 @@ function setupEventListeners() {
   
   // File input change handler
   document.getElementById("videoInput").addEventListener("change", handleFileSelect);
+}
+
+function removeTitleHeader() {
+  const titleHeader = document.getElementById("titleHeader");
+  titleHeader.style.display = "none";
+}
+
+function addTitleHeader() {
+  const titleHeader = document.getElementById("titleHeader");
+  titleHeader.style.display = "flex";
 }
 
 function openUploadModal() {
@@ -542,12 +564,14 @@ videos.forEach(video => {
       </div>
       <div class="video-info">
         <h3 class="video-title">${video.title}</h3>
-        <p class="video-artist">Artist: ${video.artist}</p>
+        <p class="video-artist">${video.artist}</p>
         <p class="video-artist">Uploaded by: ${video.uploaderName}</p>
-        <p class="video-duration">Duration: ${video.duration || formatSecondsToMMSS(video.durationSeconds || 0)}</p>
+        
         <p class="video-date">${uploadDate}</p>
       </div>
     `;
+
+{/* <p class="video-duration">Duration: ${video.duration || formatSecondsToMMSS(video.durationSeconds || 0)}</p> */}
 
   // Navigate to video page when clicking the card or video (but not the delete button)
   card.addEventListener('click', (e)=>{

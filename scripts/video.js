@@ -93,7 +93,7 @@ async function loadVideoAndSidebar(videoId){
       </div>
       <div class="video-info" style="padding:0;">
         <div class="video-title" style="font-size:1rem;">${v.title}</div>
-        <div class="video-artist" style="font-size:0.85rem;">${v.uploaderName || v.artist || ''}</div>
+        <div class="video-artist" style="font-size:0.85rem;">${v.artist || ''}</div>
       </div>
     `;
 

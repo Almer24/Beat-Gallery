@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>School Videos Project</title>
+  <title>Beat Gallery</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="styles/styles.css">
   <link rel="stylesheet" href="components/glitch.css">
@@ -10,15 +10,15 @@
 <body>
   <div class="container">
     <div class="controls">
-      <h2>Beat Gallery</h2>
+      <h2 id="navTitle">Beat Gallery</h2>
       
       <div class="control-buttons">
         <div class="search-container">
           <span class="search-icon">🔍</span>
           <input type="text" id="searchInput" class="search-input" placeholder="Search videos by title or artist...">
         </div>
-        <a id="myUploadsBtn" class="filter-btn" onclick="document.getElementById('videoGrid').scrollIntoView({ behavior: 'smooth', block: 'end' })">My Uploads</a>
-        <a id="allVideosBtn" class="filter-btn active" onclick="document.getElementById('videoGrid').scrollIntoView({ behavior: 'smooth', block: 'end' })">All Videos</a>
+        <a id="myUploadsBtn" class="filter-btn">My Uploads</a>
+        <a id="allVideosBtn" class="filter-btn active">All Videos</a>
         <a id="uploadBtn" class="upload-btn">Upload Video</a>
       </div>
     </div>
@@ -27,8 +27,9 @@
       <div class="overlay"></div>
       <h1 class="glitch no-hover" data-text="Beat Gallery">Beat Gallery</h1>
       <p>Share and discover amazing videos</p>
-      <button>Watch Now</button>
+      <button id="watchBtn">Watch Now</button>
     </div>
+
     <div id="videoGrid"></div>
   </div>
 
