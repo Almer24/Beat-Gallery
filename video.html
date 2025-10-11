@@ -6,7 +6,16 @@
   <link rel="stylesheet" href="styles/video.css">
 </head>
 <body>
-  <div class="video-main-container">
+  <!-- Loading Screen -->
+  <div id="loadingScreen" class="loading-screen">
+    <div class="loading-content">
+      <h2>Beat Gallery</h2>
+      <div class="loading-spinner"></div>
+      <p>Loading...</p>
+    </div>
+  </div>
+
+  <div class="video-main-container" style="display: none;" id="mainContent">
     <div class="headerVideo">
       <button id="backButton" class="back-button" onclick="window.location.href='index.html'">←</button>
       <h2>Beat Gallery</h2>
@@ -38,6 +47,7 @@
         <div id="sidebarList"></div>
       </div>
     </div>
+  </div>
   </div>
 
   <script type="module" src="scripts/video.js"></script>

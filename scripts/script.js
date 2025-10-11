@@ -43,6 +43,7 @@ let currentFilter = 'all'; // 'all' or 'my'
 window.addEventListener("DOMContentLoaded", () => {
   checkAuthState();
   setupEventListeners();
+  setupMobileMenu();
 });
 
 // Check authentication state
@@ -52,14 +53,29 @@ function checkAuthState() {
       currentUser = user;
       await loadUserProfile();
       updateUIForLoggedInUser();
+      // Show main content and hide loading screen
+      showMainContent();
+      // Fetch videos only when authenticated
+      fetchVideos();
     } else {
       currentUser = null;
       userProfile = null;
       updateUIForLoggedOutUser();
+      // Redirect to auth page if not authenticated
+      window.location.href = 'auth.html';
     }
-    // Always fetch videos regardless of auth state
-    fetchVideos();
   });
+}
+
+// Show main content after authentication
+function showMainContent() {
+  const loadingScreen = document.getElementById('loadingScreen');
+  const mainContent = document.getElementById('mainContent');
+  
+  if (loadingScreen && mainContent) {
+    loadingScreen.style.display = 'none';
+    mainContent.style.display = 'block';
+  }
 }
 
 async function loadUserProfile() {
@@ -94,6 +110,12 @@ function updateUIForLoggedInUser() {
     logoutBtn.onclick = handleLogout;
     controls.appendChild(logoutBtn);
   }
+
+  // Show mobile logout button
+  const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+  if (mobileLogoutBtn) {
+    mobileLogoutBtn.style.display = 'block';
+  }
 }
 
 function updateUIForLoggedOutUser() {
@@ -108,6 +130,12 @@ function updateUIForLoggedOutUser() {
   if (logoutBtn) {
     logoutBtn.remove();
   }
+
+  // Hide mobile logout button
+  const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+  if (mobileLogoutBtn) {
+    mobileLogoutBtn.style.display = 'none';
+  }
 }
 
 async function handleLogout() {
@@ -116,7 +144,7 @@ async function handleLogout() {
     window.location.href = 'auth.html';
   } catch (error) {
     console.error('Logout error:', error);
-    alert('Failed to logout. Please try again.');
+    showNotification('error', 'Logout Failed', 'Failed to logout. Please try again.');
   }
 }
 
@@ -270,7 +298,7 @@ function handleUpload(e) {
 async function uploadVideo() {
   // Check if user is authenticated
   if (!currentUser) {
-    alert("Please log in to upload videos!");
+    showNotification('error', 'Authentication Required', 'Please log in to upload videos!');
     window.location.href = 'auth.html';
     return;
   }
@@ -284,12 +312,12 @@ async function uploadVideo() {
   const durationDetectedSeconds = parseInt(document.getElementById("videoDuration").dataset.seconds || '0', 10);
 
   if (!file) {
-    alert("Please choose a video first!");
+    showNotification('error', 'No Video Selected', 'Please choose a video first!');
     return;
   }
 
   if (!titleInput || !artistInput) {
-    alert("Please fill in title and artist!");
+    showNotification('error', 'Missing Information', 'Please fill in title and artist!');
     return;
   }
 
@@ -327,7 +355,7 @@ async function uploadVideo() {
 
     if (error) {
       console.error("❌ Upload failed:", error.message);
-      alert("Upload failed: " + error.message);
+      showNotification('error', 'Upload Failed', 'Upload failed: ' + error.message);
       return;
     }
 
@@ -380,11 +408,11 @@ async function uploadVideo() {
     // Close modal and refresh videos
     closeUploadModal();
     await fetchVideos();
-    alert("✅ Video uploaded successfully!");
+    showNotification('success', 'Upload Successful', 'Video uploaded successfully!');
 
   } catch (error) {
     console.error("❌ Upload error:", error);
-    alert("Upload failed: " + error.message);
+    showNotification('error', 'Upload Failed', 'Upload failed: ' + error.message);
   } finally {
     submitBtn.disabled = false;
     submitBtn.textContent = "Upload Video";
@@ -597,20 +625,20 @@ videos.forEach(video => {
 async function deleteVideo(videoId) {
   // Check if user is authenticated
   if (!currentUser) {
-    alert("Please log in to delete videos!");
+    showNotification('error', 'Authentication Required', 'Please log in to delete videos!');
     return;
   }
 
   // Find the video to check ownership
   const video = allVideos.find(v => v.id === videoId);
   if (!video) {
-    alert("Video not found!");
+    showNotification('error', 'Video Not Found', 'Video not found!');
     return;
   }
 
   // Check if user owns this video
   if (video.uploadedBy !== currentUser.uid) {
-    alert("You can only delete your own videos!");
+    showNotification('error', 'Permission Denied', 'You can only delete your own videos!');
     return;
   }
 
@@ -652,11 +680,11 @@ async function deleteVideo(videoId) {
     
     // Refresh the video list
     await fetchVideos();
-    alert("✅ Video deleted successfully!");
+    showNotification('success', 'Video Deleted', 'Video deleted successfully!');
     
   } catch (error) {
     console.error("❌ Error deleting video:", error);
-    alert("Failed to delete video: " + error.message);
+    showNotification('error', 'Delete Failed', 'Failed to delete video: ' + error.message);
   }
 }
 
@@ -733,3 +761,174 @@ async function getVideoDurationSeconds(file) {
 
 // Make deleteVideo globally accessible
 window.deleteVideo = deleteVideo;
+
+// Notification System
+function showNotification(type, title, message, duration = 5000) {
+  const container = document.getElementById('notificationContainer');
+  if (!container) return;
+
+  const notification = document.createElement('div');
+  notification.className = `notification ${type}`;
+  
+  const icons = {
+    success: '✅',
+    error: '❌',
+    info: 'ℹ️'
+  };
+
+  notification.innerHTML = `
+    <div class="notification-icon">${icons[type] || 'ℹ️'}</div>
+    <div class="notification-content">
+      <div class="notification-title">${title}</div>
+      <div class="notification-message">${message}</div>
+    </div>
+    <button class="notification-close" onclick="closeNotification(this)">&times;</button>
+  `;
+
+  container.appendChild(notification);
+
+  // Trigger animation
+  setTimeout(() => {
+    notification.classList.add('show');
+  }, 10);
+
+  // Auto-remove after duration
+  if (duration > 0) {
+    setTimeout(() => {
+      closeNotification(notification.querySelector('.notification-close'));
+    }, duration);
+  }
+}
+
+function closeNotification(closeBtn) {
+  const notification = closeBtn.closest('.notification');
+  if (!notification) return;
+
+  notification.classList.remove('show');
+  
+  setTimeout(() => {
+    if (notification.parentNode) {
+      notification.parentNode.removeChild(notification);
+    }
+  }, 300);
+}
+
+// Make functions globally accessible
+window.showNotification = showNotification;
+window.closeNotification = closeNotification;
+
+// Mobile Menu Setup
+function setupMobileMenu() {
+  const hamburgerBtn = document.getElementById('hamburgerBtn');
+  const mobileMenu = document.getElementById('mobileMenu');
+  const closeMobileMenu = document.getElementById('closeMobileMenu');
+  const mobileSearchInput = document.getElementById('mobileSearchInput');
+  const mobileMyUploadsBtn = document.getElementById('mobileMyUploadsBtn');
+  const mobileAllVideosBtn = document.getElementById('mobileAllVideosBtn');
+  const mobileUploadBtn = document.getElementById('mobileUploadBtn');
+  const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+
+  // Open mobile menu
+  if (hamburgerBtn) {
+    hamburgerBtn.addEventListener('click', () => {
+      mobileMenu.classList.add('open');
+      hamburgerBtn.classList.add('active');
+    });
+  }
+
+  // Close mobile menu
+  if (closeMobileMenu) {
+    closeMobileMenu.addEventListener('click', closeMenu);
+  }
+
+  // Close menu when clicking outside
+  if (mobileMenu) {
+    mobileMenu.addEventListener('click', (e) => {
+      if (e.target === mobileMenu) {
+        closeMenu();
+      }
+    });
+  }
+
+  // Close menu function
+  function closeMenu() {
+    mobileMenu.classList.remove('open');
+    hamburgerBtn.classList.remove('active');
+  }
+
+  // Sync search input
+  if (mobileSearchInput) {
+    const mainSearchInput = document.getElementById('searchInput');
+    
+    mobileSearchInput.addEventListener('input', (e) => {
+      if (mainSearchInput) {
+        mainSearchInput.value = e.target.value;
+        mainSearchInput.dispatchEvent(new Event('input'));
+      }
+      closeMenu();
+    });
+
+    // Sync from main to mobile
+    if (mainSearchInput) {
+      mainSearchInput.addEventListener('input', (e) => {
+        mobileSearchInput.value = e.target.value;
+      });
+    }
+  }
+
+  // Sync filter buttons
+  if (mobileMyUploadsBtn) {
+    mobileMyUploadsBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('myUploadsBtn').click();
+      closeMenu();
+    });
+  }
+
+  if (mobileAllVideosBtn) {
+    mobileAllVideosBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('allVideosBtn').click();
+      closeMenu();
+    });
+  }
+
+  // Sync upload button
+  if (mobileUploadBtn) {
+    mobileUploadBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('uploadBtn').click();
+      closeMenu();
+    });
+  }
+
+  // Sync logout button
+  if (mobileLogoutBtn) {
+    mobileLogoutBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      handleLogout();
+      closeMenu();
+    });
+  }
+
+  // Update mobile menu active states
+  function updateMobileMenuStates() {
+    const allBtn = document.getElementById('allVideosBtn');
+    const myBtn = document.getElementById('myUploadsBtn');
+    
+    if (allBtn && mobileAllVideosBtn) {
+      mobileAllVideosBtn.classList.toggle('active', allBtn.classList.contains('active'));
+    }
+    if (myBtn && mobileMyUploadsBtn) {
+      mobileMyUploadsBtn.classList.toggle('active', myBtn.classList.contains('active'));
+    }
+  }
+
+  // Update states when filters change
+  const observer = new MutationObserver(updateMobileMenuStates);
+  const allBtn = document.getElementById('allVideosBtn');
+  const myBtn = document.getElementById('myUploadsBtn');
+  
+  if (allBtn) observer.observe(allBtn, { attributes: true, attributeFilter: ['class'] });
+  if (myBtn) observer.observe(myBtn, { attributes: true, attributeFilter: ['class'] });
+}

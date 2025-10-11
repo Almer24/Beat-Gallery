@@ -111,12 +111,26 @@ async function loadVideoAndSidebar(videoId){
 window.addEventListener('DOMContentLoaded', ()=>{
   onAuthStateChanged(auth, (user)=>{
     if(!user){
-      // optional: enforce auth to watch
-      // window.location.href = 'auth.html';
+      // Enforce auth to watch videos
+      window.location.href = 'auth.html';
+      return;
     }
+    // Show main content after authentication
+    showMainContent();
     const id = qs('id');
     loadVideoAndSidebar(id);
   });
 });
+
+// Show main content after authentication
+function showMainContent() {
+  const loadingScreen = document.getElementById('loadingScreen');
+  const mainContent = document.getElementById('mainContent');
+  
+  if (loadingScreen && mainContent) {
+    loadingScreen.style.display = 'none';
+    mainContent.style.display = 'block';
+  }
+}
 
 

@@ -8,9 +8,25 @@
   <link rel="stylesheet" href="components/glitch.css">
 </head>
 <body>
-  <div class="container">
+  <!-- Loading Screen -->
+  <div id="loadingScreen" class="loading-screen">
+    <div class="loading-content">
+      <h2>Beat Gallery</h2>
+      <div class="loading-spinner"></div>
+      <p>Loading...</p>
+    </div>
+  </div>
+
+  <div class="container" style="display: none;" id="mainContent">
     <div class="controls">
       <h2 id="navTitle">Beat Gallery</h2>
+      
+      <!-- Hamburger menu button for mobile -->
+      <button id="hamburgerBtn" class="hamburger-btn">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
       
       <div class="control-buttons">
         <div class="search-container">
@@ -23,6 +39,28 @@
       </div>
     </div>
 
+    <!-- Mobile menu overlay -->
+    <div id="mobileMenu" class="mobile-menu">
+      <div class="mobile-menu-content">
+        <div class="mobile-menu-header">
+          <h3>Menu</h3>
+          <button id="closeMobileMenu" class="close-mobile-menu">&times;</button>
+        </div>
+        
+        <div class="mobile-search-container">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="mobileSearchInput" class="mobile-search-input" placeholder="Search videos...">
+        </div>
+        
+        <div class="mobile-menu-buttons">
+          <a id="mobileMyUploadsBtn" class="mobile-filter-btn">My Uploads</a>
+          <a id="mobileAllVideosBtn" class="mobile-filter-btn active">All Videos</a>
+          <a id="mobileUploadBtn" class="mobile-upload-btn">Upload Video</a>
+          <a id="mobileLogoutBtn" class="mobile-logout-btn">Logout</a>
+        </div>
+      </div>
+    </div>
+
     <div class="titleHeader" id="titleHeader">
       <div class="overlay"></div>
       <h1 class="glitch hover-only" data-text="Beat Gallery">Beat Gallery</h1>
@@ -32,6 +70,10 @@
 
     <div id="videoGrid"></div>
   </div>
+  </div>
+
+  <!-- Notification System -->
+  <div id="notificationContainer" class="notification-container"></div>
 
   <!-- Upload Modal -->
   <div id="uploadModal" class="modal">
