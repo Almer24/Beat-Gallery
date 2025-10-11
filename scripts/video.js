@@ -47,7 +47,12 @@ async function loadVideoAndSidebar(videoId){
   // Load the video source; do not autoplay or mute
   player.load();
   document.getElementById('videoTitle').textContent = data.title;
-  let displayName = data.uploaderName || data.artist || 'Unknown';
+  
+  // Set artist name
+  document.getElementById('videoArtist').textContent = data.artist || 'Unknown Artist';
+  
+  // Set uploader name
+  let displayName = data.uploaderName || 'Unknown';
   // Prefer profile name from users collection if available
   if (data.uploadedBy) {
     try {
@@ -56,14 +61,12 @@ async function loadVideoAndSidebar(videoId){
         if (userDoc.data().name) {
           displayName = userDoc.data().name;
         }
-      } else {
-        
       }
     } catch (e) {
       
     }
   }
-  document.getElementById('videoArtist').textContent = `Uploaded by: ${displayName}`;
+  document.getElementById('videoUploader').textContent = `Uploaded by: ${displayName}`;
   document.getElementById('videoDuration').textContent = `Duration: ${data.duration || formatSecondsToMMSS(data.durationSeconds)}`;
   const dateStr = data.uploadedAt ? new Date(data.uploadedAt.seconds * 1000).toLocaleString() : 'Unknown date';
   document.getElementById('videoDate').textContent = dateStr;
@@ -86,14 +89,14 @@ async function loadVideoAndSidebar(videoId){
     item.style.cursor = 'pointer';
 
     item.innerHTML = `
-      <div class="video-container" style="height: 70px;">
+      <div class="video-container-sidebar" style="height: 100px;">
         <video muted>
           <source src="${v.video_url}" type="video/mp4">
         </video>
       </div>
-      <div class="video-info" style="padding:0;">
-        <div class="video-title" style="font-size:1rem;">${v.title}</div>
-        <div class="video-artist" style="font-size:0.85rem;">${v.artist || ''}</div>
+      <div class="video-info-sidebar" style="padding:0;">
+        <div class="video-title-sidebar" style="font-size:1rem;">${v.title}</div>
+        <div class="video-artist-sidebar" style="font-size:0.85rem;">${v.artist || ''}</div>
       </div>
     `;
 

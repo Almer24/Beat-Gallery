@@ -52,14 +52,13 @@ function checkAuthState() {
       currentUser = user;
       await loadUserProfile();
       updateUIForLoggedInUser();
-      fetchVideos();
     } else {
       currentUser = null;
       userProfile = null;
       updateUIForLoggedOutUser();
-      // Always redirect to auth page if not logged in
-      window.location.href = 'auth.html';
     }
+    // Always fetch videos regardless of auth state
+    fetchVideos();
   });
 }
 
@@ -226,6 +225,7 @@ function handleFileSelect(e) {
 }
 
 function handleSearch(e) {
+  removeTitleHeader();
   const searchTerm = e.target.value.toLowerCase();
   applyFilters(searchTerm);
 }
@@ -550,7 +550,7 @@ videos.forEach(video => {
     
     card.innerHTML = `
       <div class="video-container">
-        <video width="100%" controls>
+        <video width="100%">
           <source src="${video.videoUrl}" type="video/mp4">
           Your browser does not support the video tag.
         </video>
