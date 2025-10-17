@@ -184,6 +184,158 @@ function setupEventListeners() {
   document.getElementById("videoInput").addEventListener("change", handleFileSelect);
 }
 
+// removed: wireGenerateThumbnailsButtons
+
+async function generateMissingThumbnails() {
+  try {
+    showNotification('info', 'Generating', 'Creating thumbnails for videos without one...');
+    // Ensure we have latest videos
+    await fetchVideos();
+    const videosNeedingThumbs = allVideos.filter(v => !v.thumbnailUrl && v.videoUrl);
+    if (videosNeedingThumbs.length === 0) {
+      showNotification('success', 'Up to date', 'All videos already have thumbnails.');
+      return;
+    }
+
+    let processed = 0;
+    for (const v of videosNeedingThumbs) {
+      try {
+        const blob = await fetchVideoFrameBlob(v.videoUrl, 2.0); // grab at 2s
+        const fileName = getThumbnailFileName(v);
+        const { publicUrl } = await uploadThumbnailToSupabase(blob, fileName);
+        await saveVideoThumbnailUrl(v.id, publicUrl);
+        processed += 1;
+      } catch (err) {
+        console.warn('[thumbs] failed for', v.id, err);
+      }
+    }
+
+    await fetchVideos();
+    showNotification('success', 'Thumbnails Ready', `Generated ${processed} thumbnail(s).`);
+  } catch (err) {
+    console.error('[thumbs] generation failed', err);
+    showNotification('error', 'Thumbnail Error', String(err.message || err));
+  }
+}
+
+function getThumbnailFileName(video) {
+  const safeTitle = (video.title || 'video').trim().toLowerCase().replace(/[^a-z0-9]+/g, '_');
+  return `thumbnails/${safeTitle}_${video.id}.jpg`;
+}
+
+async function fetchVideoFrameBlob(videoUrl, atSeconds = 1.0) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const res = await fetch(videoUrl, { mode: 'cors' });
+      const fileBlob = await res.blob();
+      const url = URL.createObjectURL(fileBlob);
+      const videoEl = document.createElement('video');
+      videoEl.crossOrigin = 'anonymous';
+      videoEl.src = url;
+      videoEl.muted = true;
+      videoEl.preload = 'auto';
+      videoEl.addEventListener('loadedmetadata', () => {
+        const captureTime = Math.min(Math.max(0.1, atSeconds), (videoEl.duration || atSeconds));
+        videoEl.currentTime = captureTime;
+      }, { once: true });
+      videoEl.addEventListener('seeked', () => {
+        try {
+          const canvas = document.createElement('canvas');
+          // Use 16:9 thumbnail; fit within source
+          const width = 480; // reasonable grid thumb width
+          const height = 270;
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          // Cover: compute scaling to fill canvas
+          const vw = videoEl.videoWidth || width;
+          const vh = videoEl.videoHeight || height;
+          const scale = Math.max(width / vw, height / vh);
+          const dw = vw * scale;
+          const dh = vh * scale;
+          const dx = (width - dw) / 2;
+          const dy = (height - dh) / 2;
+          ctx.drawImage(videoEl, dx, dy, dw, dh);
+          canvas.toBlob((b) => {
+            try { URL.revokeObjectURL(url); } catch {}
+            if (!b) return reject(new Error('Canvas toBlob failed'));
+            resolve(b);
+          }, 'image/jpeg', 0.82);
+        } catch (e) {
+          try { URL.revokeObjectURL(url); } catch {}
+          reject(e);
+        }
+      }, { once: true });
+      videoEl.addEventListener('error', (e) => {
+        try { URL.revokeObjectURL(url); } catch {}
+        reject(new Error('Failed to load video for thumbnail'));
+      }, { once: true });
+      try { videoEl.load(); } catch {}
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
+// Create thumbnail blob directly from a File without fetching
+async function createThumbnailBlobFromFile(file, atSeconds = 1.0) {
+  return new Promise((resolve, reject) => {
+    try {
+      const url = URL.createObjectURL(file);
+      const videoEl = document.createElement('video');
+      videoEl.crossOrigin = 'anonymous';
+      videoEl.src = url;
+      videoEl.muted = true;
+      videoEl.preload = 'auto';
+      videoEl.addEventListener('loadedmetadata', () => {
+        const captureTime = Math.min(Math.max(0.1, atSeconds), (videoEl.duration || atSeconds));
+        videoEl.currentTime = captureTime;
+      }, { once: true });
+      videoEl.addEventListener('seeked', () => {
+        try {
+          const canvas = document.createElement('canvas');
+          const width = 480, height = 270;
+          canvas.width = width; canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          const vw = videoEl.videoWidth || width;
+          const vh = videoEl.videoHeight || height;
+          const scale = Math.max(width / vw, height / vh);
+          const dw = vw * scale, dh = vh * scale;
+          const dx = (width - dw) / 2, dy = (height - dh) / 2;
+          ctx.drawImage(videoEl, dx, dy, dw, dh);
+          canvas.toBlob((b) => {
+            try { URL.revokeObjectURL(url); } catch {}
+            if (!b) return reject(new Error('Canvas toBlob failed'));
+            resolve(b);
+          }, 'image/jpeg', 0.82);
+        } catch (e) {
+          try { URL.revokeObjectURL(url); } catch {}
+          reject(e);
+        }
+      }, { once: true });
+      videoEl.addEventListener('error', () => {
+        try { URL.revokeObjectURL(url); } catch {}
+        reject(new Error('Failed to load file for thumbnail'));
+      }, { once: true });
+      try { videoEl.load(); } catch {}
+    } catch (e) { reject(e); }
+  });
+}
+
+async function uploadThumbnailToSupabase(blob, fileName) {
+  const { data, error } = await supabase.storage
+    .from('video')
+    .upload(fileName, blob, { contentType: 'image/jpeg', upsert: true });
+  if (error) throw error;
+  const { data: urlData } = supabase.storage.from('video').getPublicUrl(fileName);
+  return { publicUrl: urlData.publicUrl };
+}
+
+async function saveVideoThumbnailUrl(videoId, url) {
+  const ref = doc(db, 'videos', videoId);
+  await updateDoc(ref, { thumbnailUrl: url });
+}
+
 function removeTitleHeader() {
   const titleHeader = document.getElementById("titleHeader");
   titleHeader.style.display = "none";
@@ -366,6 +518,18 @@ async function uploadVideo() {
 
     const videoUrl = urlData.publicUrl;
 
+    // Generate thumbnail from the selected file (client-side)
+    let thumbUrl = null;
+    try {
+      const thumbBlob = await createThumbnailBlobFromFile(file, 2.0);
+      const baseName = fileName.split('/').pop().replace(/\.[^.]+$/, '');
+      const thumbName = `thumbnails/${baseName}.jpg`;
+      const uploaded = await uploadThumbnailToSupabase(thumbBlob, thumbName);
+      thumbUrl = uploaded.publicUrl;
+    } catch (e) {
+      console.warn('[upload] thumbnail generation failed:', e);
+    }
+
     // Ensure we use the user's profile name from users collection
     console.log('[upload] userProfile at start:', userProfile);
     let profileName = userProfile?.name;
@@ -397,6 +561,7 @@ async function uploadVideo() {
       duration: durationString, // duration in MM:SS format (auto-filled)
       durationSeconds: durationInSeconds, // duration in seconds for calculations
       videoUrl,
+      thumbnailUrl: thumbUrl,
       uploadedBy: currentUser.uid,
       uploaderName: chosenUploaderName,
       uploaderEmail: currentUser.email
@@ -414,12 +579,34 @@ async function uploadVideo() {
     console.error("❌ Upload error:", error);
     showNotification('error', 'Upload Failed', 'Upload failed: ' + error.message);
   } finally {
+    // Reset form fields and clear file input after upload finishes
+    try {
+      const form = document.getElementById("uploadForm");
+      if (form) form.reset();
+
+      const fileInputEl = document.getElementById("videoInput");
+      if (fileInputEl) fileInputEl.value = ""; // clears the selected file
+
+      const durationFieldEl = document.getElementById("videoDuration");
+      if (durationFieldEl) {
+        durationFieldEl.value = "";
+        durationFieldEl.dataset.seconds = "0";
+      }
+
+      const fileLabel = document.querySelector('.file-input-label');
+      if (fileLabel) {
+        fileLabel.textContent = "📁 Click to select video file";
+        fileLabel.style.background = "#2a2a2a";
+        fileLabel.style.color = "#ffffff";
+      }
+    } catch (_) {}
+
     submitBtn.disabled = false;
     submitBtn.textContent = "Upload Video";
   }
 }
 
-async function saveVideoDetails({ title, artist, duration, durationSeconds, videoUrl, uploadedBy, uploaderName, uploaderEmail }) {
+async function saveVideoDetails({ title, artist, duration, durationSeconds, videoUrl, thumbnailUrl, uploadedBy, uploaderName, uploaderEmail }) {
 try {
   const docRef = await addDoc(collection(db, "videos"), {
     title: title,
@@ -427,6 +614,7 @@ try {
     duration: duration, // in MM:SS format
     durationSeconds: durationSeconds, // in seconds for calculations
     video_url: videoUrl,
+    thumbnailUrl: thumbnailUrl ?? null,
     uploadedBy: uploadedBy, // User ID
     uploaderName: uploaderName, // User's display name
     uploaderEmail: uploaderEmail, // User's email
@@ -495,6 +683,7 @@ try {
         title: data.title,
         artist: data.artist,
         videoUrl: data.video_url,
+        thumbnailUrl: data.thumbnailUrl,
         uploadedAt: data.uploadedAt,
         uploadedBy: data.uploadedBy,
         duration: data.duration,
@@ -578,10 +767,14 @@ videos.forEach(video => {
     
     card.innerHTML = `
       <div class="video-container">
-        <video width="100%">
-          <source src="${video.videoUrl}" type="video/mp4">
-          Your browser does not support the video tag.
-        </video>
+        ${video.thumbnailUrl ? `
+          <img src="${video.thumbnailUrl}" alt="${video.title}" style="width:100%; height:100%; object-fit: cover; display:block;" />
+        ` : `
+          <video width="100%">
+            <source src="${video.videoUrl}" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        `}
         ${canDelete ? `
         <div class="video-actions">
           <button class="action-btn" data-delete-id="${video.id}" title="Delete video">
@@ -901,6 +1094,8 @@ function setupMobileMenu() {
       closeMenu();
     });
   }
+
+  // removed: mobileGenerateThumbsBtn wiring
 
   // Sync logout button
   if (mobileLogoutBtn) {

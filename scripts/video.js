@@ -90,9 +90,13 @@ async function loadVideoAndSidebar(videoId){
 
     item.innerHTML = `
       <div class="video-container-sidebar" style="height: 100px;">
-        <video muted>
-          <source src="${v.video_url}" type="video/mp4">
-        </video>
+        ${v.thumbnailUrl ? `
+          <img src="${v.thumbnailUrl}" alt="${v.title}" style="height:100px; object-fit:cover; display:block;" />
+        ` : `
+          <video muted>
+            <source src="${v.video_url}" type="video/mp4">
+          </video>
+        `}
       </div>
       <div class="video-info-sidebar" style="padding:0;">
         <div class="video-title-sidebar" style="font-size:1rem;">${v.title}</div>
